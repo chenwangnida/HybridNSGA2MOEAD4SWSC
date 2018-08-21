@@ -1,0 +1,80 @@
+parent.0 = @ec.multiobjective.nsga2.NSGA2Breeder nsga2.params
+parent.1 = @ec.simple.SimpleShortStatistics simple.params
+
+
+pop.subpop.0.size = 500
+generations       = 51
+
+seed.0                                         = 32
+composition-task                               = problem.xml
+composition-taxonomy                           = taxonomy.xml
+composition-services                           = services-output.xml
+#composition-task                              = test_problem.xml
+#composition-taxonomy                          = test_taxonomy.xml
+#composition-services                          = test_serv.xml
+fitness-weight1                                = 0.25
+fitness-weight2                                = 0.25
+fitness-weight3                                = 0.25
+fitness-weight4                                = 0.25
+dynamic-normalisation                          = true
+
+stat.evaluations                               = $eval.stat
+stat.eval-sample-rate                          = 30
+
+pop.subpop.0.species		 = ec.vector.VectorSpecies
+pop.subpop.0.species.ind	 = wsc.SequenceVectorIndividual
+pop.subpop.0.species.fitness = ec.multiobjective.nsga2.NSGA2MultiObjectiveFitness
+
+multi.fitness.num-objectives = 2
+multi.fitness.min.0 = 0.0
+multi.fitness.max.0 = 2.0
+multi.fitness.min.1 = 0.0
+multi.fitness.max.1 = 2.0
+#multi.fitness.min.2 = 0.0
+#multi.fitness.max.2 = 1.0
+#multi.fitness.min.3 = 0.0
+#multi.fitness.max.3 = 1.0
+
+multi.fitness.maximize.0 = false
+multi.fitness.maximize.1 = false
+#multi.fitness.maximize.2 = false
+#multi.fitness.maximize.3 = false
+
+# The global mutation probability must be set, so we set it to 0
+pop.subpop.0.species.mutation-prob	= 0.0
+
+eval.problem            = wsc.WSCProblem
+init                    = wsc.WSCInitializer
+stat                    = wsc.WSCMultiObjectiveStatistics
+stat.silent.front       = false
+stat.do-time            = true
+
+eval		            = ec.multiobjective.nsga2.NSGA2Evaluator
+#breed                   = ec.multiobjective.nsga2.NSGA2Breeder
+breed                   = wsc.MOEADBreeder
+#exch					= wsc.WSCMultiObjectiveLocalSearch
+
+pop.subpop.0.species.pipe                      = ec.breed.MultiBreedingPipeline
+pop.subpop.0.species.pipe.num-sources          = 3
+pop.subpop.0.species.pipe.source.0             = wsc.WSCCrossoverPipeline
+pop.subpop.0.species.pipe.source.0.prob        = 0.8
+pop.subpop.0.species.pipe.source.0.num-sources = 2
+pop.subpop.0.species.pipe.source.1             = wsc.WSCMutationPipeline
+pop.subpop.0.species.pipe.source.1.prob        = 0.1
+pop.subpop.0.species.pipe.source.1.num-sources = 1
+pop.subpop.0.species.pipe.source.2             = ec.breed.ReproductionPipeline
+#pop.subpop.0.species.pipe.source.2             = wsc.WSCLocalSearchPipeline
+#pop.subpop.0.species.pipe.source.2             = wsc.WSCSmartLocalSearchPipeline
+pop.subpop.0.species.pipe.source.2.prob        = 0.1
+pop.subpop.0.species.pipe.source.2.num-sources = 1
+pop.subpop.0.species.pipe.source.0.source.0	   = wsc.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.0.source.1	   = wsc.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.1.source.0	   = wsc.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.2.source.0	   = wsc.MOEADTournamentSelection
+
+select.tournament.size                         = 2
+
+tchebycheff = true
+numNeighbours = 500
+numLocalSearchTries = 30
+localSearchBound = 40
