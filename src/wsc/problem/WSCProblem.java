@@ -9,7 +9,7 @@ import ec.Individual;
 import ec.Problem;
 import ec.multiobjective.MultiObjectiveFitness;
 import ec.simple.SimpleProblemForm;
-import wsc.InitialWSCPool;
+import wsc.data.pool.InitialWSCPool;
 import wsc.data.pool.Service;
 import wsc.ecj.nsga2.SequenceVectorIndividual;
 import wsc.graph.ServiceGraph;
