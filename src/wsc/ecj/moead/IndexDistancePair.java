@@ -1,4 +1,4 @@
-package wsc.problem;
+package wsc.ecj.moead;
 
 /**
  * An object to associated the index information with the distance of a given

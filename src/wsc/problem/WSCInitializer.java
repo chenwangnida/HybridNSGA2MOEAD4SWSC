@@ -41,7 +41,7 @@ import ec.Subpopulation;
 import ec.multiobjective.MultiObjectiveFitness;
 import ec.simple.SimpleInitializer;
 import ec.util.Parameter;
-import wsc.problem.IndexDistancePair;
+import wsc.ecj.moead.IndexDistancePair;
 import wsc.ecj.nsga2.WSCRandom;
 import wsc.data.pool.InitialWSCPool;
 import wsc.data.pool.Service;
