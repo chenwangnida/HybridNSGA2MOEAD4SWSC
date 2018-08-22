@@ -1,5 +1,7 @@
 package wsc.problem;
 
+import static java.lang.Math.abs;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -33,8 +35,10 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Table;
 
 import ec.EvolutionState;
+import ec.Individual;
 import ec.Population;
 import ec.Subpopulation;
+import ec.multiobjective.MultiObjectiveFitness;
 import ec.simple.SimpleInitializer;
 import ec.util.Parameter;
 import wsc.problem.IndexDistancePair;
@@ -136,7 +140,6 @@ public class WSCInitializer extends SimpleInitializer {
 		Parameter weight6Param = new Parameter("fitness-weight6");
 		Parameter evaluationsLogNameParam = new Parameter("stat.evaluations");
 		Parameter evalSampleRateParam = new Parameter("stat.eval-sample-rate");
-		Parameter dynamicNormalisationParam = new Parameter("dynamic-normalisation");
 		Parameter tchebycheffParam = new Parameter("tchebycheff");
 		Parameter numObjectivesParam = new Parameter("multi.fitness.num-objectives");
 		Parameter popSizeParam = new Parameter("pop.subpop.0.size");
@@ -216,9 +219,57 @@ public class WSCInitializer extends SimpleInitializer {
 		setupTime = System.currentTimeMillis() - startTime;
 
 	}
-	
+
 	/**
-	 * Create a neighborhood for each weight vector, based on the Euclidean distance between each two vectors.
+	 * Calculates the problem score using the Tchebycheff approach, and the given
+	 * set of weights.
+	 *
+	 * @param ind
+	 * @param problemIndex
+	 *            - for retrieving weights and ideal point
+	 * @return score
+	 */
+	public double calculateTchebycheffScore(Individual ind, int problemIndex) {
+		double[] problemWeights = weights[problemIndex];
+		double max_fun = -1 * Double.MAX_VALUE;
+
+		MultiObjectiveFitness fit = (MultiObjectiveFitness) ind.fitness;
+
+		for (int i = 0; i < numObjectives; i++) {
+			double diff = abs(fit.getObjectives()[i] - idealPoint[i]);
+			double feval;
+			if (problemWeights[i] == 0)
+				feval = 0.00001 * diff;
+			else
+				feval = problemWeights[i] * diff;
+			if (feval > max_fun)
+				max_fun = feval;
+		}
+		return max_fun;
+	}
+
+	/**
+	 * Calculates the problem score for a given individual, using a given set of
+	 * weights.
+	 *
+	 * @param ind
+	 * @param problemIndex
+	 *            - for retrieving weights
+	 * @return score
+	 */
+	public double calculateScore(Individual ind, int problemIndex) {
+		double[] problemWeights = weights[problemIndex];
+		MultiObjectiveFitness fit = (MultiObjectiveFitness) ind.fitness;
+
+		double sum = 0;
+		for (int i = 0; i < numObjectives; i++)
+			sum += (problemWeights[i]) * fit.getObjectives()[i];
+		return sum;
+	}
+
+	/**
+	 * Create a neighborhood for each weight vector, based on the Euclidean distance
+	 * between each two vectors.
 	 */
 	private void identifyNeighbourWeights() {
 		// Calculate distance between vectors
@@ -237,21 +288,22 @@ public class WSCInitializer extends SimpleInitializer {
 			neighbourhood[i] = neighbours;
 		}
 	}
-	
 
 	/**
 	 * Returns the indices for the nearest neighbors, according to their distance
 	 * from the current vector.
 	 *
-	 * @param distances - a list of distances from the other vectors
-	 * @param currentIndex - the index of the current vector
+	 * @param distances
+	 *            - a list of distances from the other vectors
+	 * @param currentIndex
+	 *            - the index of the current vector
 	 * @return indices of nearest neighbors
 	 */
 	private int[] identifyNearestNeighbours(double[] distances, int currentIndex) {
 		Queue<IndexDistancePair> indexDistancePairs = new LinkedList<IndexDistancePair>();
 
 		// Convert the vector of distances to a list of index-distance pairs.
-		for(int i = 0; i < distances.length; i++) {
+		for (int i = 0; i < distances.length; i++) {
 			indexDistancePairs.add(new IndexDistancePair(i, distances[i]));
 		}
 		// Sort the pairs according to the distance, from lowest to highest.
@@ -260,18 +312,19 @@ public class WSCInitializer extends SimpleInitializer {
 		// Get the indices for the required number of neighbours
 		int[] neighbours = new int[numNeighbours];
 
-		// Get the neighbours, including the vector itself
+		// Get the neighbors, including the vector itself
 		IndexDistancePair neighbourCandidate;
 		for (int i = 0; i < numNeighbours; i++) {
 			neighbourCandidate = indexDistancePairs.poll();
- 			// Uncomment this if you want to exclude the vector itself from being considered as part of the neighbourhood
-//			while (neighbourCandidate.getIndex() == currentIndex)
-//				neighbourCandidate = indexDistancePairs.poll();
+			// Uncomment this if you want to exclude the vector itself from being considered
+			// as part of the neighbourhood
+			// while (neighbourCandidate.getIndex() == currentIndex)
+			// neighbourCandidate = indexDistancePairs.poll();
 			neighbours[i] = neighbourCandidate.getIndex();
 		}
 		return neighbours;
 	}
-	
+
 	/**
 	 * Calculates the Euclidean distance between two weight vectors.
 	 *
@@ -298,8 +351,8 @@ public class WSCInitializer extends SimpleInitializer {
 	}
 
 	/**
-	 * Initialize uniformely spread weight vectors. This code come from the
-	 * authors' original code base.
+	 * Initialize uniformely spread weight vectors. This code come from the authors'
+	 * original code base.
 	 */
 	private void initWeights() {
 		for (int i = 0; i < popSize; i++) {
