@@ -355,11 +355,13 @@ public class WSCInitializer extends SimpleInitializer {
 	 * original code base.
 	 */
 	private void initWeights() {
+
+		double interval = popSize / (popSize - 1);
 		for (int i = 0; i < popSize; i++) {
 			if (numObjectives == 2) {
 				double[] weightVector = new double[2];
-				weightVector[0] = i / (double) popSize;
-				weightVector[1] = (popSize - i) / (double) popSize;
+				weightVector[0] = (i * interval) / (double) popSize;
+				weightVector[1] = (popSize - (i * interval)) / (double) popSize;
 				weights[i] = weightVector;
 			} else if (numObjectives == 3) {
 				for (int j = 0; j < popSize; j++) {

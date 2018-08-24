@@ -22,33 +22,34 @@ public class WSCMutationPipeline extends BreedingPipeline {
 	}
 
 	@Override
-	public int produce(int min, int max, int start, int subpopulation,
-			Individual[] inds, EvolutionState state, int thread) {
+	public int produce(int min, int max, int start, int subpopulation, Individual[] inds, EvolutionState state,
+			int thread) {
 
 		int n = sources[0].produce(min, max, start, subpopulation, inds, state, thread);
 
-        if (!(sources[0] instanceof BreedingPipeline)) {
-            for(int q=start;q<n+start;q++)
-                inds[q] = (Individual)(inds[q].clone());
-        }
+		// Individual original = (Individual) inds[start];
 
-        if (!(inds[start] instanceof SequenceVectorIndividual))
-            // uh oh, wrong kind of individual
-            state.output.fatal("WSCMutationPipeline didn't get a SequenceVectorIndividual. The offending individual is in subpopulation "
-            + subpopulation + " and it's:" + inds[start]);
+		if (!(sources[0] instanceof BreedingPipeline)) {
+			inds[start] = (Individual) (inds[start].clone());
+		}
 
-        WSCInitializer init = (WSCInitializer) state.initializer;
+		if (!(inds[start] instanceof SequenceVectorIndividual))
+			// uh oh, wrong kind of individual
+			state.output
+					.fatal("WSCMutationPipeline didn't get a SequenceVectorIndividual. The offending individual is: "
+							+ inds[start]);
 
-        // Perform mutation
-        for(int q=start;q<n+start;q++) {
-        	SequenceVectorIndividual tree = (SequenceVectorIndividual)inds[q];
+		WSCInitializer init = (WSCInitializer) state.initializer;
 
-        	int indexA = WSCInitializer.random.nextInt(tree.genome.length);
-        	int indexB = WSCInitializer.random.nextInt(tree.genome.length);
-        	swapServices(tree.genome, indexA, indexB);
-            tree.evaluated=false;
-        }
-        return n;
+		// Perform mutation
+		SequenceVectorIndividual tree = (SequenceVectorIndividual) inds[start].clone();
+		int indexA = init.random.nextInt(tree.genome.length);
+		int indexB = init.random.nextInt(tree.genome.length);
+		swapServices(tree.genome, indexA, indexB);
+		inds[start] = tree;
+		inds[start].evaluated = false;
+
+		return n;
 	}
 
 	private void swapServices(Service[] genome, int indexA, int indexB) {

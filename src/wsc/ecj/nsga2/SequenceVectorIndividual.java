@@ -1,14 +1,17 @@
 package wsc.ecj.nsga2;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import ec.EvolutionState;
 import ec.Fitness;
+import ec.multiobjective.MultiObjectiveFitness;
 import ec.util.Parameter;
 import ec.vector.VectorIndividual;
-
+import wsc.data.pool.InitialWSCPool;
 import wsc.data.pool.Service;
+import wsc.graph.ServiceGraph;
 import wsc.problem.WSCInitializer;
 
 public class SequenceVectorIndividual extends VectorIndividual {
@@ -87,6 +90,23 @@ public class SequenceVectorIndividual extends VectorIndividual {
 			g.genome = genome.clone();
 		}
 		return g;
+	}
+	
+	public void calculateSequenceFitness(SequenceVectorIndividual ind2, WSCInitializer init, EvolutionState state) {
+
+		// use ind2 to generate graph
+		InitialWSCPool.getServiceCandidates().clear();
+		List<Service> serviceCandidates = new ArrayList<Service>(Arrays.asList(ind2.genome));
+		InitialWSCPool.setServiceCandidates(serviceCandidates);
+
+		ServiceGraph ind2_graph = init.graGenerator.generateGraphBySerQueue();
+		ind2.setStrRepresentation(ind2_graph.toString());
+		// evaluate updated updated_graph
+		init.eval.aggregationAttribute(ind2, ind2_graph);
+
+		((MultiObjectiveFitness) ind2.fitness).setObjectives(state, init.eval.calculateFitness(ind2));
+		ind2.evaluated = true;
+
 	}
 
 	public void setAvailability(double availability) {

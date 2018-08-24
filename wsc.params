@@ -43,7 +43,7 @@ stat.silent.front       = false
 stat.do-time            = true
 
 eval		            = ec.multiobjective.nsga2.NSGA2Evaluator
-breed                   = ec.multiobjective.moead.MOEADBreeder
+breed                   = wsc.ecj.moead.MOEADBreeder
 #exch					= wsc.WSCMultiObjectiveLocalSearch
 
 pop.subpop.0.species.pipe                      = ec.breed.MultiBreedingPipeline
@@ -54,13 +54,14 @@ pop.subpop.0.species.pipe.source.0.num-sources = 2
 pop.subpop.0.species.pipe.source.1             = wsc.ecj.nsga2.WSCMutationPipeline
 pop.subpop.0.species.pipe.source.1.prob        = 0.1
 pop.subpop.0.species.pipe.source.1.num-sources = 1
-pop.subpop.0.species.pipe.source.2             = ec.breed.ReproductionPipeline
+pop.subpop.0.species.pipe.source.2             = wsc.ecj.nsga2.WSCSmartLocalSearchPipeline
 pop.subpop.0.species.pipe.source.2.prob        = 0.1
 pop.subpop.0.species.pipe.source.2.num-sources = 1
-pop.subpop.0.species.pipe.source.0.source.0	   = ec.select.TournamentSelection
-pop.subpop.0.species.pipe.source.0.source.1	   = ec.select.TournamentSelection
-pop.subpop.0.species.pipe.source.1.source.0	   = ec.select.TournamentSelection
-pop.subpop.0.species.pipe.source.2.source.0	   = ec.select.TournamentSelection
+pop.subpop.0.species.pipe.source.0.source.0	   = wsc.ecj.moead.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.0.source.1	   = wsc.ecj.moead.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.1.source.0	   = wsc.ecj.moead.MOEADTournamentSelection
+pop.subpop.0.species.pipe.source.2.source.0	   = wsc.ecj.moead.MOEADTournamentSelection
+
 select.tournament.size                         = 2
 
 tchebycheff = true

@@ -25,94 +25,101 @@ public class WSCCrossoverPipeline extends BreedingPipeline {
 	}
 
 	@Override
-	public int produce(int min, int max, int start, int subpopulation,
-			Individual[] inds, EvolutionState state, int thread) {
+	public int produce(int min, int max, int start, int subpopulation, Individual[] inds, EvolutionState state,
+			int thread) {
 
 		WSCInitializer init = (WSCInitializer) state.initializer;
+		
+		int n1 = sources[0].produce(min, max, start, subpopulation, inds, state, thread);
+		Individual ind1 = (Individual) inds[start].clone();
+		int n2 = sources[1].produce(min, max, start, subpopulation, inds, state, thread);
+		Individual ind2 = (Individual) inds[start].clone();
 
-		Individual[] inds1 = new Individual[inds.length];
-		Individual[] inds2 = new Individual[inds.length];
+		if (!(ind1 instanceof SequenceVectorIndividual))
+			// uh oh, wrong kind of individual
+			state.output.fatal(
+					"WSCCrossoverPipeline didn't get a SequenceVectorIndividual. The offending individual is: " + ind1);
 
-		int n1 = sources[0].produce(min, max, 0, subpopulation, inds1, state, thread);
-		int n2 = sources[1].produce(min, max, 0, subpopulation, inds2, state, thread);
+		if (!(ind2 instanceof SequenceVectorIndividual))
+			// uh oh, wrong kind of individual
+			state.output.fatal(
+					"WSCCrossoverPipeline didn't get a SequenceVectorIndividual. The offending individual is: " + ind2);
 
-        if (!(sources[0] instanceof BreedingPipeline)) {
-            for(int q=0;q<n1;q++)
-                inds1[q] = (Individual)(inds1[q].clone());
-        }
+		// perform crossover
+		SequenceVectorIndividual t1 = ((SequenceVectorIndividual) ind1);
+		SequenceVectorIndividual t2 = ((SequenceVectorIndividual) ind2);
 
-        if (!(sources[1] instanceof BreedingPipeline)) {
-            for(int q=0;q<n2;q++)
-                inds2[q] = (Individual)(inds2[q].clone());
-        }
+		// Select two random index numbers as the boundaries for the crossover section
+		int indexA = WSCInitializer.random.nextInt(t1.genome.length);
+		int indexB = WSCInitializer.random.nextInt(t1.genome.length);
 
-        if (!(inds1[0] instanceof SequenceVectorIndividual))
-            // uh oh, wrong kind of individual
-            state.output.fatal("WSCCrossoverPipeline didn't get a SequenceVectorIndividual. The offending individual is in subpopulation "
-            + subpopulation + " and it's:" + inds1[0]);
+		// Make sure they are different
+		while (indexA == indexB)
+			indexB = WSCInitializer.random.nextInt(t1.genome.length);
 
-        if (!(inds2[0] instanceof SequenceVectorIndividual))
-            // uh oh, wrong kind of individual
-            state.output.fatal("WSCCrossoverPipeline didn't get a SequenceVectorIndividual. The offending individual is in subpopulation "
-            + subpopulation + " and it's:" + inds2[0]);
+		// Determine which boundary they are
+		int minBoundary = Math.min(indexA, indexB);
+		int maxBoundary = Math.max(indexA, indexB);
 
-        int nMin = Math.min(n1, n2);
+		// Create new genomes
+		Service[] newGenome1 = new Service[t1.genome.length];
+		Service[] newGenome2 = new Service[t2.genome.length];
 
-        // Perform crossover
-        for(int q=start,x=0; q < nMin + start; q++,x++) {
-    		SequenceVectorIndividual t1 = ((SequenceVectorIndividual)inds1[x]);
-    		SequenceVectorIndividual t2 = ((SequenceVectorIndividual)inds2[x]);
+		// Swap crossover sections between candidates, keeping track of which services
+		// are in each section
+		Set<Service> newSection1 = new HashSet<Service>();
+		Set<Service> newSection2 = new HashSet<Service>();
 
-    		// Select two random index numbers as the boundaries for the crossover section
-    		int indexA = WSCInitializer.random.nextInt(t1.genome.length);
-    		int indexB = WSCInitializer.random.nextInt(t1.genome.length);
+		for (int index = minBoundary; index <= maxBoundary; index++) {
+			// Copy section from parent 1 to genome 2
+			newGenome2[index] = t1.genome[index];
+			newSection2.add(t1.genome[index]);
 
-    		// Make sure they are different
-    		while (indexA == indexB)
-    			indexB = WSCInitializer.random.nextInt(t1.genome.length);
+			// Copy section from parent 2 to genome 1
+			newGenome1[index] = t2.genome[index];
+			newSection1.add(t2.genome[index]);
+		}
 
-    		// Determine which boundary they are
-    		int minBoundary = Math.min(indexA, indexB);
-    		int maxBoundary = Math.max(indexA, indexB);
+		// Now fill the remainder of the new genomes, making sure not to duplicate any
+		// services
+		fillNewGenome(t2, newGenome2, newSection2, minBoundary, maxBoundary);
+		fillNewGenome(t1, newGenome1, newSection1, minBoundary, maxBoundary);
 
-    		// Create new genomes
-    		Service[] newGenome1 = new Service[t1.genome.length];
-    		Service[] newGenome2 = new Service[t2.genome.length];
+		// Replace the old genomes with the new ones
+		t1.genome = newGenome1;
+		t2.genome = newGenome2;
 
-    		// Swap crossover sections between candidates, keeping track of which services are in each section
-    		Set<Service> newSection1 = new HashSet<Service>();
-    		Set<Service> newSection2 = new HashSet<Service>();
+		// evaluate fitness of t1 and t2
+		t1.calculateSequenceFitness(t1, init, state);
+		t2.calculateSequenceFitness(t2, init, state);
 
-    		for (int index = minBoundary; index <= maxBoundary; index++) {
-    			// Copy section from parent 1 to genome 2
-    			newGenome2[index] = t1.genome[index];
-    			newSection2.add(t1.genome[index]);
+		// produce only one child with lower TchebycheffScore
+		double firstScore;
+		double secondScore;
 
-    			// Copy section from parent 2 to genome 1
-    			newGenome1[index] = t2.genome[index];
-    			newSection1.add(t2.genome[index]);
-    		}
+		if (WSCInitializer.tchebycheff) {
+			// originalScore = init.calculateTchebycheffScore(original, start);
+			firstScore = init.calculateTchebycheffScore(t1, start);
+			secondScore = init.calculateTchebycheffScore(t2, start);
+		} else {
+			// originalScore = init.calculateScore(original, start);
+			firstScore = init.calculateScore(t1, start);
+			secondScore = init.calculateScore(t2, start);
+		}
 
-    		// Now fill the remainder of the new genomes, making sure not to duplicate any services
-    		fillNewGenome(t2, newGenome2, newSection2, minBoundary, maxBoundary);
-    		fillNewGenome(t1, newGenome1, newSection1, minBoundary, maxBoundary);
+		// if (firstScore < secondScore && firstScore <= originalScore)
+		if (firstScore < secondScore)
+			inds[start] = t1;
+		// else if (secondScore <= originalScore)
+		else
+			inds[start] = t2;
 
-    		// Replace the old genomes with the new ones
-    		t1.genome = newGenome1;
-    		t2.genome = newGenome2;
-
-	        inds[q] = t1;
-	        inds[q].evaluated=false;
-
-	        if (q+1 < inds.length) {
-	        	inds[q+1] = t2;
-	        	inds[q+1].evaluated=false;
-	        }
-        }
-        return n1;
+		inds[start].evaluated = false;
+		return n1;
 	}
 
-	private void fillNewGenome(SequenceVectorIndividual parent, Service[] newGenome, Set<Service> newSection, int minBoundary, int maxBoundary) {
+	private void fillNewGenome(SequenceVectorIndividual parent, Service[] newGenome, Set<Service> newSection,
+			int minBoundary, int maxBoundary) {
 		int genomeIndex = getInitialIndex(minBoundary, maxBoundary);
 
 		for (int i = 0; i < parent.genome.length; i++) {
