@@ -3,7 +3,10 @@ package wsc.ecj.nsga2;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
 import ec.EvolutionState;
 import ec.Fitness;
 import ec.multiobjective.MultiObjectiveFitness;
@@ -26,8 +29,9 @@ public class SequenceVectorIndividual extends VectorIndividual {
 	private double semanticDistance;
 
 	public Service[] genome;
-	
+
 	private String strRepresentation; // a string of graph-based representation
+	private Set<Service> usedSerSet;
 
 	@Override
 	public Parameter defaultBase() {
@@ -91,7 +95,7 @@ public class SequenceVectorIndividual extends VectorIndividual {
 		}
 		return g;
 	}
-	
+
 	public void calculateSequenceFitness(SequenceVectorIndividual ind2, WSCInitializer init, EvolutionState state) {
 
 		// use ind2 to generate graph
@@ -101,6 +105,15 @@ public class SequenceVectorIndividual extends VectorIndividual {
 
 		ServiceGraph ind2_graph = init.graGenerator.generateGraphBySerQueue();
 		ind2.setStrRepresentation(ind2_graph.toString());
+
+		Set<Service> usedSerSet = new HashSet<Service>();
+		ind2_graph.vertexSet().forEach(st -> {
+			if (st.equals("startNode")||st.equals("endNode"))
+				return;
+			usedSerSet.add(init.serviceMap.get(st));
+		});
+		ind2.setUsedSerSet(usedSerSet);
+
 		// evaluate updated updated_graph
 		init.eval.aggregationAttribute(ind2, ind2_graph);
 
@@ -164,6 +177,13 @@ public class SequenceVectorIndividual extends VectorIndividual {
 	public void setStrRepresentation(String strRepresentation) {
 		this.strRepresentation = strRepresentation;
 	}
-	
+
+	public Set<Service> getUsedSerSet() {
+		return usedSerSet;
+	}
+
+	public void setUsedSerSet(Set<Service> usedSerSet) {
+		this.usedSerSet = usedSerSet;
+	}
 
 }

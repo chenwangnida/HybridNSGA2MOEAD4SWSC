@@ -52,6 +52,9 @@ public class WSCSmartLocalSearchPipeline extends BreedingPipeline {
 		WSCInitializer init = (WSCInitializer) state.initializer;
 		SequenceVectorIndividual bestNeighbour = (SequenceVectorIndividual) inds[start].clone();
 
+		bestNeighbour.calculateSequenceFitness(bestNeighbour, init, state);
+		Set<Service> usedServices = bestNeighbour.getUsedSerSet();
+
 		double bestScore;
 		if (WSCInitializer.tchebycheff)
 			bestScore = init.calculateTchebycheffScore(bestNeighbour, start);
@@ -68,7 +71,6 @@ public class WSCSmartLocalSearchPipeline extends BreedingPipeline {
 
 				neighbour = (SequenceVectorIndividual) inds[start].clone();
 
-				Set<Service> usedServices = Sets.newHashSet(neighbour.genome);
 
 				if (swapIsAllowed(neighbour.genome, indexA, indexB, usedServices, start, init)) {
 					swapServices(neighbour.genome, indexA, indexB);

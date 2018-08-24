@@ -2,7 +2,9 @@ package wsc.problem;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import ec.EvolutionState;
 import ec.Individual;
@@ -36,6 +38,15 @@ public class WSCProblem extends Problem implements SimpleProblemForm {
 
 		ServiceGraph ind2_graph = init.graGenerator.generateGraphBySerQueue();
 		ind2.setStrRepresentation(ind2_graph.toString());
+
+		Set<Service> usedSerSet = new HashSet<Service>();
+		ind2_graph.vertexSet().forEach(st -> {
+			if (st.equals("startNode")||st.equals("endNode"))
+				return;
+			usedSerSet.add(init.serviceMap.get(st));
+		});
+		ind2.setUsedSerSet(usedSerSet);
+
 		// evaluate updated updated_graph
 		init.eval.aggregationAttribute(ind2, ind2_graph);
 

@@ -52,7 +52,7 @@ import wsc.owl.bean.OWLClass;
 public class WSCInitializer extends SimpleInitializer {
 
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 64360108933058866L;
 	// Constants with of order of QoS attributes
@@ -356,7 +356,7 @@ public class WSCInitializer extends SimpleInitializer {
 	 */
 	private void initWeights() {
 
-		double interval = popSize / (popSize - 1);
+		double interval = (double) popSize / ((double) popSize - 1);
 		for (int i = 0; i < popSize; i++) {
 			if (numObjectives == 2) {
 				double[] weightVector = new double[2];
