@@ -211,7 +211,7 @@ public class WSCInitializer extends SimpleInitializer {
 			initIdealPoint();
 		// Create a set of uniformly spread weight vectors
 		weights = new double[popSize][numObjectives];
-		initWeights();
+		initWeights_new();
 		// Identify the neighboring weights for each vector
 		neighbourhood = new int[popSize][numNeighbours];
 		identifyNeighbourWeights();
@@ -347,6 +347,24 @@ public class WSCInitializer extends SimpleInitializer {
 		idealPoint = new double[numObjectives];
 		for (int i = 0; i < numObjectives; i++) {
 			idealPoint[i] = 0.0;
+		}
+	}
+
+	/**
+	 * Initialize uniformely spread weight vectors. This code come from the authors'
+	 * original code base.
+	 */
+	private void initWeights_new() {
+
+		for (int i = 1; i <= popSize; i++) {
+			if (numObjectives == 2) {
+				double[] weightVector = new double[2];
+				weightVector[0] = (i - 1) / (double) (popSize - 1);
+				weightVector[1] = (popSize - i) / (double) (popSize - 1);
+				weights[i-1] = weightVector;
+			} else {
+				throw new RuntimeException("Unsupported number of objectives. Should be 2 or 3.");
+			}
 		}
 	}
 
